@@ -11,7 +11,8 @@ declare global {
 
 export const supabase: BrowserClient = (() => {
   if (typeof window === "undefined") {
-    return createBrowserClient(supabaseUrl, supabaseAnonKey);
+    // 서버 사이드에서는 실제 클라이언트 불필요 (호출은 브라우저에서만 발생)
+    return {} as BrowserClient;
   }
   if (!globalThis._supabaseBrowserClient) {
     globalThis._supabaseBrowserClient = createBrowserClient(
