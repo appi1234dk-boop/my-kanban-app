@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
 import { Profile } from "@/lib/types";
 import { getProfile } from "@/lib/supabase/queries";
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: import("@supabase/supabase-js").AuthChangeEvent, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         const newUser = session?.user ?? null;
         setUser(newUser);
 
