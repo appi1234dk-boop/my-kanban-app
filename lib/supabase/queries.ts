@@ -36,7 +36,7 @@ export type RawProject = {
   id: string;
   title: string;
   description: string;
-  is_starred: boolean;
+  project_stars: { user_id: string }[];
   is_ended: boolean;
   status: string;
   created_at: string;
@@ -78,12 +78,12 @@ export function mapCard(raw: RawCard): Card {
   };
 }
 
-export function mapProject(raw: RawProject): Project {
+export function mapProject(raw: RawProject, userId?: string): Project {
   return {
     id: raw.id,
     title: raw.title,
     description: raw.description,
-    is_starred: raw.is_starred,
+    is_starred: userId ? raw.project_stars.some((s) => s.user_id === userId) : false,
     is_ended: raw.is_ended,
     status: (raw.status as Project["status"]) ?? "대기",
     created_at: raw.created_at,
@@ -101,7 +101,8 @@ export function mapProject(raw: RawProject): Project {
 }
 
 const PROJECT_SELECT = `
-  id, title, description, is_starred, is_ended, status, created_at, owner_id,
+  id, title, description, is_ended, status, created_at, owner_id,
+  project_stars ( user_id ),
   project_members ( members ( id, name, avatar, color, user_id ) ),
   columns (
     id, title, position, color, status,
@@ -121,19 +122,20 @@ const CARD_DETAIL_SELECT = `
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
-export async function getProjects(client: SupabaseClient): Promise<Project[]> {
+export async function getProjects(client: SupabaseClient, userId?: string): Promise<Project[]> {
   const { data, error } = await client
     .from("projects")
     .select(PROJECT_SELECT)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data as unknown as RawProject[]).map(mapProject);
+  return (data as unknown as RawProject[]).map((raw) => mapProject(raw, userId));
 }
 
 export async function getProject(
   client: SupabaseClient,
-  id: string
+  id: string,
+  userId?: string
 ): Promise<Project | null> {
   const { data, error } = await client
     .from("projects")
@@ -145,7 +147,7 @@ export async function getProject(
     if (error.code === "PGRST116") return null; // not found
     throw error;
   }
-  return mapProject(data as unknown as RawProject);
+  return mapProject(data as unknown as RawProject, userId);
 }
 
 export async function getCardDetail(
@@ -376,14 +378,23 @@ export async function updateProjectStatus(
 
 export async function toggleProjectStar(
   client: SupabaseClient,
-  id: string,
+  projectId: string,
+  userId: string,
   is_starred: boolean
 ): Promise<void> {
-  const { error } = await client
-    .from("projects")
-    .update({ is_starred })
-    .eq("id", id);
-  if (error) throw error;
+  if (is_starred) {
+    const { error } = await client
+      .from("project_stars")
+      .insert({ user_id: userId, project_id: projectId });
+    if (error) throw error;
+  } else {
+    const { error } = await client
+      .from("project_stars")
+      .delete()
+      .eq("user_id", userId)
+      .eq("project_id", projectId);
+    if (error) throw error;
+  }
 }
 
 export async function createColumn(

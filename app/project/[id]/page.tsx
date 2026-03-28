@@ -6,9 +6,11 @@ import BoardPageClient from "./BoardPageClient";
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const client = await createServerClient();
+  const { data: { user } } = await client.auth.getUser();
+  const userId = user?.id;
   const [project, allProjects, allMembers] = await Promise.all([
-    getProject(client, id),
-    getProjects(client),
+    getProject(client, id, userId),
+    getProjects(client, userId),
     getAllMembers(client),
   ]);
 

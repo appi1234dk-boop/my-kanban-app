@@ -147,7 +147,7 @@ export default function AppSidebar({ projects, currentProjectId, projectMembers,
                         {member.name}
                       </p>
                     </div>
-                    {onRemoveMember && ownerId && currentUserId === ownerId && member.user_id !== currentUserId && (
+                    {onRemoveMember && member.user_id !== ownerId && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onRemoveMember(member.id); }}

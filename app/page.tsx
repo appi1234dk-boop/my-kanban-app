@@ -4,7 +4,8 @@ import ProjectsClient from "@/components/landing/ProjectsClient";
 
 export default async function Home() {
   const client = await createServerClient();
-  const projects = await getProjects(client);
+  const { data: { user } } = await client.auth.getUser();
+  const projects = await getProjects(client, user?.id);
 
   return <ProjectsClient initialProjects={projects} />;
 }

@@ -38,7 +38,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { nickname: nickname.trim() },
-        emailRedirectTo: `${location.origin}/auth/callback`,
+        emailRedirectTo: `${location.origin}/auth/callback?signup=true`,
       },
     });
     setLoading(false);

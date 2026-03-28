@@ -28,13 +28,14 @@ export default function ProjectsClient({ initialProjects }: Props) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   async function handleToggleStar(id: string) {
+    if (!user) return;
     const project = projects.find((p) => p.id === id);
     if (!project) return;
     const newValue = !project.is_starred;
     setProjects((prev) =>
       prev.map((p) => (p.id === id ? { ...p, is_starred: newValue } : p))
     );
-    await toggleProjectStar(supabase, id, newValue);
+    await toggleProjectStar(supabase, id, user.id, newValue);
   }
 
   async function handleDeleteProject(id: string) {
