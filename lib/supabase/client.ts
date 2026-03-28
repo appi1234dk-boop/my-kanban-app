@@ -1,9 +1,14 @@
-import { createBrowserClient } from "@supabase/ssr";
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-type BrowserClient = ReturnType<typeof createBrowserClient>;
+// createBrowserClient를 동적으로 import해서 SSR 번들에서 location 참조 방지
+function createClient() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createBrowserClient } = require("@supabase/ssr");
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+}
+
+type BrowserClient = ReturnType<typeof createClient>;
 declare global {
   // eslint-disable-next-line no-var
   var _supabaseBrowserClient: BrowserClient | undefined;
@@ -15,10 +20,7 @@ export const supabase: BrowserClient = (() => {
     return {} as BrowserClient;
   }
   if (!globalThis._supabaseBrowserClient) {
-    globalThis._supabaseBrowserClient = createBrowserClient(
-      supabaseUrl,
-      supabaseAnonKey
-    );
+    globalThis._supabaseBrowserClient = createClient();
   }
   return globalThis._supabaseBrowserClient;
 })();
